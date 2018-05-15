@@ -44,10 +44,15 @@ class ApiService
             $appendsData = $arguments[2];
         }
         $uri = $this->buildUri();
-        $result = json_decode($this->request($uri, $header, $arguments[0], $makeSign, $appendsData), true);
-        $this->data = array();
-        $this->header = array();
-        return $result;
+        $res = $this->sendRequest($uri, $header, $arguments[0], $makeSign, $appendsData);
+        if ($res) {
+            $result = json_decode($res, true);
+            $this->data = array();
+            $this->header = array();
+            return $result;
+        }
+        return false;
+
         # code...
     }
 
@@ -61,10 +66,14 @@ class ApiService
         return true;
     }
 
+    public function setHeader(array $header)
+    {
+        $this->header = $header;
+    }
+
     public function generateSign($params)
     {
         ksort($params);
-
         $tmps = [];
         foreach ($params as $k => $v) {
             $tmps[] = $k . $v;
@@ -115,7 +124,7 @@ class ApiService
 
     }
 
-    public function request($uri, $header, array $data, $makeSign, array $appendsData)
+    public function sendRequest($uri, $header, array $data, $makeSign, array $appendsData)
     {
 
         if ($makeSign) {
@@ -141,27 +150,20 @@ class ApiService
                 'headers' => $header
             ]
         );
-        try {
-            $response = $client->request(
-                'POST',
-                $uri,
-                [
-                    'json' => $data,
-                    'http_errors' => false,
-                    'verify' => false
-                ]
-            );
-        } catch (Exception $e) {
-            print_r($header);
+        $response = $client->request(
+            'POST',
+            $uri,
+            [
+                'json' => $data,
+                'http_errors' => false,
+                'verify' => false
+            ]
+        );
+
+        if ($response->getStatusCode() != 200) {
+            return false;
         }
-
-
-        $body = $response->getBody();
-
-        $stringBody = (string)$body;
-        return $stringBody;
-
-
+        return $response->getBody()->getContents();
     }
 
     public function buildHeader(array $api_header)
