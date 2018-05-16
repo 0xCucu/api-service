@@ -1,6 +1,6 @@
 <?php
 
-use Muskid\Api\ApiService;
+use Muskid\Service\ApiService;
 
 if (!function_exists('apiService')) {
     function apiService()
