@@ -1,6 +1,6 @@
 <?php
 
-namespace Muskid\Api;
+namespace Muskid\Service;
 
 use GuzzleHttp\Client;
 
