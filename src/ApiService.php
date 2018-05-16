@@ -32,7 +32,7 @@ class ApiService
 
     public function __call($name, $arguments)
     {
-        $makeSign = false;
+        $makeSign = true;
         if (isset($arguments[1])) {
             $makeSign = true;
         }
@@ -79,9 +79,7 @@ class ApiService
             $tmps[] = $k . $v;
         }
         $serectKey = $this->serectKey;
-        if (!$app) {
-            return false;
-        }
+
         $string = $serectKey . implode('', $tmps) . $serectKey;
         return strtoupper(md5($string));
 
@@ -134,7 +132,7 @@ class ApiService
             $build['sign_method'] = 'md5';
             $build['timestamp'] = (string)time();
             $build['sign'] = $this->generateSign($build);
-            $build['data'] = $data;
+            $build = array_merge($build,$data);
             $data = null;
             $data = $build;
 
@@ -142,11 +140,10 @@ class ApiService
         if (count($appendsData) > 0) {
             $data = array_merge($data, $appendsData);
         }
-
         $client = new client(
             [
                 'timeout' => 6.5,
-                'base_uri' => $this->api_url,
+                'base_uri' => $this->apiUrl,
                 'headers' => $header
             ]
         );
@@ -159,7 +156,6 @@ class ApiService
                 'verify' => false
             ]
         );
-
         if ($response->getStatusCode() != 200) {
             return false;
         }
