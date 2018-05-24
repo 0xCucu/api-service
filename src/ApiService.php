@@ -12,7 +12,7 @@ class ApiService
     private $data;
     private $appid = "musikid_web";
     private $serectKey = "4675678127e967418d6c13c7e2a6c4f6";
-    private $apiUrl = "http://api.music.io";
+    private $apiUrl = "http://open.musikid.com";
     private $defaultHeader = [
         'Accept' => 'application/vnd.musikid.{version}+json',
         'Content-Type' => 'application/json',
@@ -124,42 +124,55 @@ class ApiService
 
     public function sendRequest($uri, $header, array $data, $makeSign, array $appendsData)
     {
+        try{
+            if ($makeSign) {
+                $build = array();
+                $build['format'] = 'json';
+                $build['app_id'] = $this->appid;
+                $build['sign_method'] = 'md5';
+                $build['timestamp'] = (string)time();
+                $build['sign'] = $this->generateSign($build);
+                $build = array_merge($build,$data);
+                $data = null;
+                $data = $build;
 
-        if ($makeSign) {
-            $build = array();
-            $build['format'] = 'json';
-            $build['app_id'] = $this->appid;
-            $build['sign_method'] = 'md5';
-            $build['timestamp'] = (string)time();
-            $build['sign'] = $this->generateSign($build);
-            $build = array_merge($build,$data);
-            $data = null;
-            $data = $build;
+            }
+            if (count($appendsData) > 0) {
+                $data = array_merge($data, $appendsData);
+            }
+            $client = new client(
+                [
+                    'timeout' => 6.5,
+                    'base_uri' => $this->apiUrl,
+                    'headers' => $header
+                ]
+            );
 
+            $response = $client->request(
+                'POST',
+                $uri,
+                [
+                    'json' => $data,
+                    'http_errors' => false,
+                    'verify' => false
+                ]
+            );
+            
+            if ($response->getStatusCode() != 200) {
+                return false;
+            }
+
+            return $response->getBody()->getContents();      
+        } catch (\GuzzleHttp\Exception\GuzzleException $e){
+           
+           return json_encode([
+                'code' => '500',
+                'msg' => '请求超时',
+                'status' => false
+            ]);
+            
         }
-        if (count($appendsData) > 0) {
-            $data = array_merge($data, $appendsData);
-        }
-        $client = new client(
-            [
-                'timeout' => 6.5,
-                'base_uri' => $this->apiUrl,
-                'headers' => $header
-            ]
-        );
-        $response = $client->request(
-            'POST',
-            $uri,
-            [
-                'json' => $data,
-                'http_errors' => false,
-                'verify' => false
-            ]
-        );
-        if ($response->getStatusCode() != 200) {
-            return false;
-        }
-        return $response->getBody()->getContents();
+        
     }
 
     public function buildHeader(array $api_header)
