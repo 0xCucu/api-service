@@ -12,7 +12,7 @@ class ApiService
     private $data;
     private $appid = "musikid_web";
     private $serectKey = "4675678127e967418d6c13c7e2a6c4f6";
-    private $apiUrl = "http://api.music.io";
+    private $apiUrl = "http://open.musikid.com";
     private $defaultHeader = [
         'Accept' => 'application/vnd.musikid.{version}+json',
         'Content-Type' => 'application/json',
@@ -157,21 +157,26 @@ class ApiService
                     'verify' => false
                 ]
             );
-        
             if ($response->getStatusCode() != 200) {
-                throw new \GuzzleHttp\Exception\ClientException("请求失败");   
+                throw new \Exception("请求失败");
             }
-            return $response->getBody()->getContents();      
+            return $response->getBody()->getContents();
         } catch (\GuzzleHttp\Exception\GuzzleException $e){
-           
+
            return json_encode([
                 'code' => '500',
                 'msg' => '请求超时',
                 'status' => false
             ]);
-            
+
+        } catch (\Exception $e) {
+            return json_encode([
+                'code' => '500',
+                'msg' => '请求超时',
+                'status' => false
+            ]);
         }
-        
+
     }
 
     public function buildHeader(array $api_header)
