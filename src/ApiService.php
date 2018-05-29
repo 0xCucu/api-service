@@ -126,15 +126,17 @@ class ApiService
     {
         try{
             if ($makeSign) {
-                $build = array();
-                $build['format'] = 'json';
-                $build['app_id'] = $this->appid;
-                $build['sign_method'] = 'md5';
-                $build['timestamp'] = (string)time();
-                $build['sign'] = $this->generateSign($build);
-                $build = array_merge($build,$data);
-                $data = null;
-                $data = $build;
+                $build                = array();
+                $build                = array_merge($build, $data);
+                $tmpData = $data['data'];
+                unset($data['data']);
+                $data['format']      = 'json';
+                $data['app_id']      = $this->appid;
+                $data['sign_method'] = 'md5';
+                $data['timestamp']   = (string) time();
+                $sign = $this->generateSign($data);
+                $data['data'] = $tmpData;
+                $data['sign'] = $sign;
 
             }
             if (count($appendsData) > 0) {
