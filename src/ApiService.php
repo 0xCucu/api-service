@@ -17,25 +17,29 @@ class ApiService
         'Accept' => 'application/vnd.musikid.{version}+json',
         'Content-Type' => 'application/json',
         'appid' => 'musikid_web',
-        'deviceid' => '{device_id}',
+        'deviceid' => 'web',
     ];
     private $header;
+    private $makeSign;
 
     public static function getInstance()
     {
         if (isset(self::$_ins) && self::$_ins instanceof self) {
+            (self::$_ins)->makeSign = false;
             return self::$_ins;
         } else {
-            return self::$_ins = new self();
+            self::$_ins = new self();
+            (self::$_ins)->makeSign = false;
+            return self::$_ins;
         }
     }
-
+    public function needSign()
+    {
+        $this->makeSign = true;
+    }
     public function __call($name, $arguments)
     {
-        $makeSign = true;
-        if (isset($arguments[1])) {
-            $makeSign = true;
-        }
+        $makeSign = $this->makeSign;
         $this->data['method'] = $name;
         $this->addHeader($this->defaultHeader);
         $header = $this->buildHeader($this->header);
@@ -124,19 +128,25 @@ class ApiService
 
     public function sendRequest($uri, $header, array $data, $makeSign, array $appendsData)
     {
-        try{
-            if ($makeSign) {
-                $build                = array();
-                $build                = array_merge($build, $data);
-                $tmpData = $data['data'];
-                unset($data['data']);
-                $data['format']      = 'json';
-                $data['app_id']      = $this->appid;
+        try {
+            if ($this->makeSign) {
+                $build = array();
+                $build = array_merge($build, $data);
+                $tmpData = [];
+                if (isset($data['data'])) {
+                    $tmpData = $data['data'];
+                    unset($data['data']);
+                }
+                $data['format'] = 'json';
+                $data['app_id'] = $this->appid;
                 $data['sign_method'] = 'md5';
-                $data['timestamp']   = (string) time();
+                $data['timestamp'] = (string) time();
                 $sign = $this->generateSign($data);
                 $data['data'] = $tmpData;
                 $data['sign'] = $sign;
+                // $build                = array_merge($build, $tmpData);
+                // $data                 = null;
+                // $data                 = $build;
 
             }
             if (count($appendsData) > 0) {
@@ -146,36 +156,34 @@ class ApiService
                 [
                     'timeout' => 6.5,
                     'base_uri' => $this->apiUrl,
-                    'headers' => $header
+                    'headers' => $header,
                 ]
             );
-
             $response = $client->request(
                 'POST',
                 $uri,
                 [
                     'json' => $data,
                     'http_errors' => false,
-                    'verify' => false
+                    'verify' => false,
                 ]
             );
             if ($response->getStatusCode() != 200) {
                 throw new \Exception("请求失败");
             }
             return $response->getBody()->getContents();
-        } catch (\GuzzleHttp\Exception\GuzzleException $e){
-
-           return json_encode([
+        } catch (\GuzzleHttp\Exception\GuzzleException $e) {
+            return json_encode([
                 'code' => '500',
                 'msg' => '请求超时',
-                'status' => false
+                'status' => false,
             ]);
 
         } catch (\Exception $e) {
             return json_encode([
                 'code' => '500',
                 'msg' => '请求超时',
-                'status' => false
+                'status' => false,
             ]);
         }
 
@@ -196,5 +204,7 @@ class ApiService
             $api_header
         );
         return $header;
+
+        # code...
     }
 }
