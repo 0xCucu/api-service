@@ -12,7 +12,7 @@ class ApiService
     private $data;
     private $appid = "musikid_web";
     private $serectKey = "4675678127e967418d6c13c7e2a6c4f6";
-    private $apiUrl = "http://open.musikid.com";
+    private $apiUrl = "http://api.musikid.wang/";
     private $defaultHeader = [
         'Accept' => 'application/vnd.musikid.{version}+json',
         'Content-Type' => 'application/json',
@@ -51,6 +51,8 @@ class ApiService
         $res = $this->sendRequest($uri, $header, $arguments[0], $makeSign, $appendsData);
         if ($res) {
             $result = json_decode($res, true);
+            $result['status'] = filter_var($result['status'], FILTER_VALIDATE_BOOLEAN);
+
             $this->data = array();
             $this->header = array();
             return $result;
@@ -144,27 +146,19 @@ class ApiService
                 $sign = $this->generateSign($data);
                 $data['data'] = $tmpData;
                 $data['sign'] = $sign;
-                // $build                = array_merge($build, $tmpData);
-                // $data                 = null;
-                // $data                 = $build;
 
             }
             if (count($appendsData) > 0) {
                 $data = array_merge($data, $appendsData);
             }
-            $client = new client(
-                [
-                    'timeout' => 6.5,
-                    'base_uri' => $this->apiUrl,
-                    'headers' => $header,
-                ]
-            );
-            $response = $client->request(
-                'POST',
-                $uri,
+
+            $clients = new client();
+            $response = $clients->post(
+                $this->apiUrl . '/' . $uri,
                 [
                     'json' => $data,
                     'http_errors' => false,
+                    'headers' => $header,
                     'verify' => false,
                 ]
             );
