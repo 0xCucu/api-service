@@ -12,7 +12,7 @@ class ApiService
     private $data;
     private $appid = "musikid_web";
     private $serectKey = "4675678127e967418d6c13c7e2a6c4f6";
-    private $apiUrl = "http://api.musikid.wang/";
+    private $apiUrl = "http://open.musikid.com/";
     private $defaultHeader = [
         'Accept' => 'application/vnd.musikid.{version}+json',
         'Content-Type' => 'application/json',
@@ -82,6 +82,9 @@ class ApiService
         ksort($params);
         $tmps = [];
         foreach ($params as $k => $v) {
+            if (is_array($v)) {
+                continue;
+            }
             $tmps[] = $k . $v;
         }
         $serectKey = $this->serectKey;
@@ -123,9 +126,7 @@ class ApiService
             $url = implode("/", $this->data['url']);
             return $url . '/' . $this->data['method'];
         }
-
         return $this->data['method'];
-
     }
 
     public function sendRequest($uri, $header, array $data, $makeSign, array $appendsData)
@@ -139,6 +140,7 @@ class ApiService
                     $tmpData = $data['data'];
                     unset($data['data']);
                 }
+                $data['device_id'] = 'WEB';
                 $data['format'] = 'json';
                 $data['app_id'] = $this->appid;
                 $data['sign_method'] = 'md5';
@@ -151,7 +153,6 @@ class ApiService
             if (count($appendsData) > 0) {
                 $data = array_merge($data, $appendsData);
             }
-
             $clients = new client();
             $response = $clients->post(
                 $this->apiUrl . '/' . $uri,
@@ -174,6 +175,7 @@ class ApiService
             ]);
 
         } catch (\Exception $e) {
+
             return json_encode([
                 'code' => '500',
                 'msg' => '请求超时',
