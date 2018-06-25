@@ -7,12 +7,13 @@ use GuzzleHttp\Client;
 class ApiService
 {
     public static $_ins;
+    public $debug = false;
     private $verison;
     private $prefix;
     private $data;
     private $appid = "musikid_web";
     private $serectKey = "4675678127e967418d6c13c7e2a6c4f6";
-    private $apiUrl = "http://open.musikid.com/";
+    public $apiUrl = "http://api.music.io";
     private $defaultHeader = [
         'Accept' => 'application/vnd.musikid.{version}+json',
         'Content-Type' => 'application/json',
@@ -52,7 +53,6 @@ class ApiService
         if ($res) {
             $result = json_decode($res, true);
             $result['status'] = filter_var($result['status'], FILTER_VALIDATE_BOOLEAN);
-
             $this->data = array();
             $this->header = array();
             return $result;
@@ -126,7 +126,9 @@ class ApiService
             $url = implode("/", $this->data['url']);
             return $url . '/' . $this->data['method'];
         }
+
         return $this->data['method'];
+
     }
 
     public function sendRequest($uri, $header, array $data, $makeSign, array $appendsData)
@@ -153,6 +155,7 @@ class ApiService
             if (count($appendsData) > 0) {
                 $data = array_merge($data, $appendsData);
             }
+
             $clients = new client();
             $response = $clients->post(
                 $this->apiUrl . '/' . $uri,
@@ -164,10 +167,17 @@ class ApiService
                 ]
             );
             if ($response->getStatusCode() != 200) {
+                if ($this->debug) {
+                    throw new \Exception($response->getBody()->getContents());
+                }
                 throw new \Exception("请求失败");
             }
             return $response->getBody()->getContents();
         } catch (\GuzzleHttp\Exception\GuzzleException $e) {
+            if ($this->debug) {
+                throw new \Exception($e->getMessage());
+            }
+            dd($e->getMessage());
             return json_encode([
                 'code' => '500',
                 'msg' => '请求超时',
@@ -175,7 +185,9 @@ class ApiService
             ]);
 
         } catch (\Exception $e) {
-
+            if ($this->debug) {
+                throw new \Exception($e->getMessage());
+            }
             return json_encode([
                 'code' => '500',
                 'msg' => '请求超时',
