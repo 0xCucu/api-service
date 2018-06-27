@@ -15,7 +15,7 @@ if (!function_exists('apiService')) {
     function apiService()
     {
         $ins = ApiService::getInstance();
-        if ($GLOBALS['debug']) {
+        if (!$GLOBALS['debug']) {
             $ins->apiUrl = "http://api.musikid.wang";
         }
         $ins->debug = $GLOBALS['debug'];
