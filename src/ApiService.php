@@ -45,7 +45,7 @@ class ApiService
         $this->addHeader($this->defaultHeader);
         $header = $this->buildHeader($this->header);
         $appendsData = [];
-        $params = $arguments ? $arguments : [0=>[]];
+        $params = $arguments ? $arguments : [0 => []];
         if (isset($arguments[2])) {
             $appendsData = $arguments[2];
         }
@@ -135,27 +135,28 @@ class ApiService
     public function sendRequest($uri, $header, array $params, $makeSign, array $appendsData)
     {
         try {
+            $data = $params;
             if ($this->makeSign) {
+                $builder = [];
                 $tmpData = [];
-
-                $data['device_id'] = 'WEB';
-                $data['format'] = 'json';
-                $data['app_id'] = $this->appid;
-                $data['sign_method'] = 'md5';
-                $data['timestamp'] = (string) time();
-                $data = $this->array_merge_hold_right($data, $params); //值合并如果重复保留右边的
-                if (isset($data['data'])) {
-                    $tmpData = $data['data'];
-                    unset($data['data']);
+                $builder['device_id'] = 'WEB';
+                $builder['format'] = 'json';
+                $builder['app_id'] = $this->appid;
+                $builder['sign_method'] = 'md5';
+                $builder['timestamp'] = (string) time();
+                $builder = $this->array_merge_hold_right($builder, $params); //值合并如果重复保留右边的
+                if (isset($builder['data'])) {
+                    $tmpData = $builder['data'];
+                    unset($builder['data']);
                 }
-                $sign = $this->generateSign($data);
-                $data['data'] = $tmpData;
-                $data['sign'] = $sign;
+                $sign = $this->generateSign($builder);
+                $builder['data'] = $tmpData;
+                $builder['sign'] = $sign;
+                $data = $builder;
             }
             if (count($appendsData) > 0) {
                 $data = array_merge($data, $appendsData);
             }
-
             $clients = new client();
             $response = $clients->post(
                 $this->apiUrl . '/' . $uri,
@@ -164,6 +165,7 @@ class ApiService
                     'http_errors' => false,
                     'headers' => $header,
                     'verify' => false,
+                    'timeout' => 6, //超时6秒
                 ]
             );
             if ($response->getStatusCode() != 200) {
@@ -183,15 +185,6 @@ class ApiService
                 'status' => false,
             ]);
 
-        } catch (\Exception $e) {
-            if ($this->debug) {
-                throw new \Exception($e->getMessage());
-            }
-            return json_encode([
-                'code' => '500',
-                'msg' => '请求超时',
-                'status' => false,
-            ]);
         }
 
     }
