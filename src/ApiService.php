@@ -45,11 +45,12 @@ class ApiService
         $this->addHeader($this->defaultHeader);
         $header = $this->buildHeader($this->header);
         $appendsData = [];
+        $params = $arguments ? $arguments : [0=>[]];
         if (isset($arguments[2])) {
             $appendsData = $arguments[2];
         }
         $uri = $this->buildUri();
-        $res = $this->sendRequest($uri, $header, $arguments[0], $makeSign, $appendsData);
+        $res = $this->sendRequest($uri, $header, $params[0], $makeSign, $appendsData);
         if ($res) {
             $result = json_decode($res, true);
             $result['status'] = filter_var($result['status'], FILTER_VALIDATE_BOOLEAN);
@@ -131,26 +132,25 @@ class ApiService
 
     }
 
-    public function sendRequest($uri, $header, array $data, $makeSign, array $appendsData)
+    public function sendRequest($uri, $header, array $params, $makeSign, array $appendsData)
     {
         try {
             if ($this->makeSign) {
-                $build = array();
-                $build = array_merge($build, $data);
                 $tmpData = [];
-                if (isset($data['data'])) {
-                    $tmpData = $data['data'];
-                    unset($data['data']);
-                }
+
                 $data['device_id'] = 'WEB';
                 $data['format'] = 'json';
                 $data['app_id'] = $this->appid;
                 $data['sign_method'] = 'md5';
                 $data['timestamp'] = (string) time();
+                $data = $this->array_merge_hold_right($data, $params); //值合并如果重复保留右边的
+                if (isset($data['data'])) {
+                    $tmpData = $data['data'];
+                    unset($data['data']);
+                }
                 $sign = $this->generateSign($data);
                 $data['data'] = $tmpData;
                 $data['sign'] = $sign;
-
             }
             if (count($appendsData) > 0) {
                 $data = array_merge($data, $appendsData);
@@ -177,7 +177,6 @@ class ApiService
             if ($this->debug) {
                 throw new \Exception($e->getMessage());
             }
-            dd($e->getMessage());
             return json_encode([
                 'code' => '500',
                 'msg' => '请求超时',
@@ -215,4 +214,30 @@ class ApiService
 
         # code...
     }
+    /**
+     * 合并数组如果重复保留右边数组
+     * @Author   Cucumber
+     * @DateTime 2018-07-12
+     * @param    [type]     $left  [description]
+     * @param    [type]     $right [description]
+     * @return   [type]            [description]
+     */
+    protected function array_merge_hold_right($left, $right)
+    {
+        $repeatKeys = [];
+        foreach ($left as $key => $value) {
+            if (isset($right[$key])) {
+                $repeatKeys[$key] = $key;
+            }
+        }
+        $newArray = array_merge($left, $right);
+        foreach ($newArray as $key => $value) {
+            if (isset($repeatKeys[$key])) {
+                $newArray[$key] = $right[$key];
+            }
+            # code...
+        }
+        return $newArray;
+    }
+
 }
