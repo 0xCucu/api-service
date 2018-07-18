@@ -26,13 +26,12 @@ class ApiService
     public static function getInstance()
     {
         if (isset(self::$_ins) && self::$_ins instanceof self) {
-            (self::$_ins)->makeSign = false;
-            return self::$_ins;
+            $instance = self::$_ins;
         } else {
-            self::$_ins = new self();
-            (self::$_ins)->makeSign = false;
-            return self::$_ins;
+            $instance = new self();
         }
+        $instance->makeSign = false;
+        return $instance;
     }
     public function needSign()
     {
