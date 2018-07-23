@@ -21,7 +21,7 @@ class ApiService
         'deviceid' => 'web',
     ];
     private $header;
-    private $makeSign;
+    private $makeSign = false;
 
     public static function getInstance()
     {
@@ -29,6 +29,7 @@ class ApiService
             $instance = self::$_ins;
         } else {
             $instance = new self();
+            self::$_ins = $instance;
         }
         $instance->makeSign = false;
         return $instance;
