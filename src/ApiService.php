@@ -22,7 +22,7 @@ class ApiService
     ];
     private $header;
     private $makeSign = false;
-
+    
     public static function getInstance()
     {
         if (isset(self::$_ins) && self::$_ins instanceof self) {
@@ -33,6 +33,11 @@ class ApiService
         }
         $instance->makeSign = false;
         return $instance;
+    }
+    public  function setSerectKey($key)
+    {
+        $this->serectKey = $key;
+        # code...
     }
     public function needSign()
     {
