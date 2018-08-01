@@ -3,8 +3,9 @@
 use Muskid\Service\ApiService;
 
 $GLOBALS['api'] = [
-    'production' => "https://open.musikid.com", //线上api 默认
-    'staging' => "http://api.musikid.wang", //测试环境
+    'production' => 'https://open.musikid.com', //线上api 默认
+    'staging' => 'http://api.musikid.wang', //测试环境
+    'development' => 'http://api.music.io', //开发环境
     'local' => 'http://api.music.io', //本地环境
 ];
 
