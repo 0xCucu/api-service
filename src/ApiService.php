@@ -12,7 +12,11 @@ class ApiService
     private $prefix;
     private $data;
     private $appid = "musikid_web";
-    private $serectKey = "4675678127e967418d6c13c7e2a6c4f6";
+    private $serectKey = [
+        'musikid_web' => '4675678127e967418d6c13c7e2a6c4f6',
+        'musikid_mobile' => 'cb278e1cd9493234bd40fda96d226288',
+        'musikid_wap' => 'cb278e1cd9493234bd40fda96d226288'
+    ];
     public $apiUrl = "http://api.music.io";
     private $defaultHeader = [
         'Accept' => 'application/vnd.musikid.{version}+json',
@@ -21,20 +25,20 @@ class ApiService
         'deviceid' => 'web',
     ];
     private $header;
-    private $makeSign = false;
-    
+    private $makeSign;
+
     public static function getInstance()
     {
         if (isset(self::$_ins) && self::$_ins instanceof self) {
-            $instance = self::$_ins;
+            (self::$_ins)->makeSign = false;
+            return self::$_ins;
         } else {
-            $instance = new self();
-            self::$_ins = $instance;
+            self::$_ins = new self();
+            (self::$_ins)->makeSign = false;
+            return self::$_ins;
         }
-        $instance->makeSign = false;
-        return $instance;
     }
-    public  function setSerectKey($key)
+    public function setSerectKey($key)
     {
         $this->serectKey = $key;
         # code...
@@ -60,7 +64,7 @@ class ApiService
             $result = json_decode($res, true);
             $result['status'] = filter_var($result['status'], FILTER_VALIDATE_BOOLEAN);
             $this->data = array();
-            $this->header = array();
+            $this->header = isset($this->header['Authorization']) ? ['Authorization' => $this->header['Authorization']] : [];
             return $result;
         }
         return false;
@@ -93,7 +97,7 @@ class ApiService
             }
             $tmps[] = $k . $v;
         }
-        $serectKey = $this->serectKey;
+        $serectKey = $this->serectKey[strtolower($this->appid)];
 
         $string = $serectKey . implode('', $tmps) . $serectKey;
         return strtoupper(md5($string));
@@ -162,6 +166,7 @@ class ApiService
             if (count($appendsData) > 0) {
                 $data = array_merge($data, $appendsData);
             }
+            $this->appid = $data['app_id'];
             $clients = new client();
             $response = $clients->post(
                 $this->apiUrl . '/' . $uri,
