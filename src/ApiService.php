@@ -11,17 +11,18 @@ class ApiService
     private $verison;
     private $prefix;
     private $data;
-    private $appid = "musikid_web";
+    private $appid = "Musikid_web";
     private $serectKey = [
-        'musikid_web' => '4675678127e967418d6c13c7e2a6c4f6',
-        'musikid_mobile' => 'cb278e1cd9493234bd40fda96d226288',
-        'musikid_wap' => 'cb278e1cd9493234bd40fda96d226288'
+        'Musikid_web' => '4675678127e967418d6c13c7e2a6c4f6',
+        'Musikid_mobile' => 'cb278e1cd9493234bd40fda96d226288',
+        'Musikid_wap' => 'cb278e1cd9493234bd40fda96d226288',
+        'Muskid_kugou' => '4675671cd949341d16cae5f6155d290e',
     ];
     public $apiUrl = "http://api.music.io";
     private $defaultHeader = [
         'Accept' => 'application/vnd.musikid.{version}+json',
         'Content-Type' => 'application/json',
-        'appid' => 'musikid_web',
+        'appid' => 'Musikid_web',
         'deviceid' => 'web',
     ];
     private $header;
@@ -97,8 +98,8 @@ class ApiService
             }
             $tmps[] = $k . $v;
         }
-        $serectKey = $this->serectKey[strtolower($this->appid)];
 
+        $serectKey = $this->serectKey[ucfirst($this->appid)];
         $string = $serectKey . implode('', $tmps) . $serectKey;
         return strtoupper(md5($string));
 
