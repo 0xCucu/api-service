@@ -16,7 +16,7 @@ class ApiService
         'Musikid_web' => '4675678127e967418d6c13c7e2a6c4f6',
         'Musikid_mobile' => 'cb278e1cd9493234bd40fda96d226288',
         'Musikid_wap' => 'cb278e1cd9493234bd40fda96d226288',
-        'Muskid_kugou' => '4675671cd949341d16cae5f6155d290e',
+        'Musikid_KuGou' => '4675671cd949341d16cae5f6155d290e',
     ];
     public $apiUrl = "http://api.music.io";
     private $defaultHeader = [
@@ -98,7 +98,6 @@ class ApiService
             }
             $tmps[] = $k . $v;
         }
-
         $serectKey = $this->serectKey[ucfirst($this->appid)];
         $string = $serectKey . implode('', $tmps) . $serectKey;
         return strtoupper(md5($string));
@@ -146,6 +145,9 @@ class ApiService
     {
         try {
             $data = $params;
+            if (isset($params['app_id'])) {
+                $this->appid = $params['app_id'];
+            }
             if ($this->makeSign) {
                 $builder = [];
                 $tmpData = [];
@@ -167,7 +169,6 @@ class ApiService
             if (count($appendsData) > 0) {
                 $data = array_merge($data, $appendsData);
             }
-            $this->appid = $data['app_id'];
             $clients = new client();
             $response = $clients->post(
                 $this->apiUrl . '/' . $uri,
