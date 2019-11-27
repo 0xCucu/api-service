@@ -177,7 +177,7 @@ class ApiService
                     'http_errors' => false,
                     'headers' => $header,
                     'verify' => false,
-                    'timeout' => 6, //超时6秒
+                    'timeout' => 60, //超时6秒
                 ]
             );
             if ($response->getStatusCode() != 200) {
